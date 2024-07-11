@@ -1,6 +1,45 @@
 import React from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Signup = () => {
+  
+  const submitHandler = async (e)=>{
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    
+    if(formData.get('password')!=formData.get('confirmPassword')){
+      toast.error('Password do not match.')
+      return;
+    }
+
+    const payload = {
+      name:formData.get("name"),
+      phone:formData.get("phone"),
+      email:formData.get("email"),
+      password:formData.get("password")
+    }
+
+    try {
+
+      const res = await axios.post(`${import.meta.env.VITE_SERVER_IP}/auth/signup`,payload);
+
+      if (res.status !== 201) {
+        console.log("Error : ", res);
+        toast.error('Signup failed please try again.')
+        return;
+      }
+
+      console.log("Server response:", res.data);
+      toast.success(res.data.message);
+
+    } catch (error) {
+      console.log("Error while sign up : ", error.response.data.error);
+      toast.error(error.response.data.error);
+    }
+  }
+
   return (
     <section className="bg-gray-100 dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
@@ -29,7 +68,7 @@ const Signup = () => {
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Create an account
             </h1>
-            <form className="space-y-4 md:space-y-6" action="#">
+            <form className="space-y-4 md:space-y-6" onSubmit={submitHandler}>
             <div>
                 <label
                   htmlFor="name"
@@ -43,6 +82,23 @@ const Signup = () => {
                   id="name"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="Name"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Your Phone no.
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  id="phone"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="10 Digit Phone number"
+                  pattern="[0-9]{10}"
                   required
                 />
               </div>
@@ -62,22 +118,7 @@ const Signup = () => {
                   required
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Your Phone no.
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  id="phone"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Phone number"
-                  required
-                />
-              </div>
+              
               <div>
                 <label
                   htmlFor="password"
@@ -91,22 +132,24 @@ const Signup = () => {
                   id="password"
                   placeholder="Password"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  autoComplete="on"
                   required
                 />
               </div>
               <div>
                 <label
-                  htmlFor="confirm-password"
+                  htmlFor="confirmPassword"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Confirm password
                 </label>
                 <input
                   type="password"
-                  name="confirm-password"
-                  id="confirm-password"
+                  name="confirmPassword"
+                  id="confirmPassword"
                   placeholder="Confirm Password"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  autoComplete="off"
                   required
                 />
               </div>
