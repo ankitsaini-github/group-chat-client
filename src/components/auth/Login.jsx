@@ -1,10 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
+
 import React from 'react'
+import { authActions } from "../../store/authReducer";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
-  
+  const history = useHistory();
+  const dispatch = useDispatch();
+
   const submitHandler = async (e)=>{
     e.preventDefault();
 
@@ -19,14 +24,16 @@ const Login = () => {
 
       const res = await axios.post(`${import.meta.env.VITE_SERVER_IP}/auth/login`,payload);
 
-      if (res.status !== 201) {
+      if (res.status !== 200) {
         console.log("Error : ", res);
         toast.error('Login failed please try again.')
         return;
       }
 
       console.log("Server response:", res.data);
+      dispatch(authActions.login({token:res.data.token, email:res.data.useremail}))
       toast.success(res.data.message);
+      history.push('/chat');
 
     } catch (error) {
       console.log("Error while Login : ", error.response.data.error);
