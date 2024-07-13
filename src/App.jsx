@@ -13,7 +13,7 @@ import Signup from './components/auth/Signup'
 const App = () => {
   return (
     <Router>
-      <div className='bg-gray-900 h-svh w-screen overflow-y-auto'>
+      <div className='bg-gray-100 dark:bg-gray-900 h-svh w-screen overflow-y-auto'>
         <Switch>
           <Route exact path="/">
             <Redirect to="/signup" />

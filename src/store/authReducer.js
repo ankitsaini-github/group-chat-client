@@ -9,11 +9,13 @@ const authSlice=createSlice({
         login(state, action){
             window.localStorage.setItem('token', action.payload.token)
             window.localStorage.setItem('useremail', action.payload.email);
+            window.localStorage.setItem('userId', action.payload.userId);
             state.isloggedin=true
         },
         logout(state){
             window.localStorage.removeItem('token')
             window.localStorage.removeItem('useremail');
+            window.localStorage.removeItem('userId');
             state.isloggedin=false
         },
     }
