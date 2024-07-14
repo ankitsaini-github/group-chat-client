@@ -27,9 +27,15 @@ const Chatbox = () => {
         toast.error(error.response.data.error);
       }
     } 
-    fetchAllChat();
-  }, [])
+    // fetchAllChat();
+    const interval = setInterval(() => fetchAllChat() , 1000);
+    return () => {
+      clearInterval(interval);
+    }
+
+  }, []);
   
+
   const sendChat = async(e) => {
     e.preventDefault();
     if (input.trim()) {
