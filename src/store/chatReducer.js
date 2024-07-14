@@ -3,14 +3,17 @@ import { createSlice } from "@reduxjs/toolkit";
 const chatSlice=createSlice({
     name:'chats',
     initialState:{
-        messages: [],
+        messages: JSON.parse(localStorage.getItem('messages')) || [],
     },
     reducers:{
         setMessages(state,action){
-          state.messages=action.payload;
+          const newMessages = action.payload.filter(msg => !state.messages.some(existingMsg => existingMsg.id === msg.id));
+          state.messages=state.messages.concat(newMessages);
+          localStorage.setItem('messages',JSON.stringify(state.messages));
         },
         addMessage(state,action){
           state.messages.push(action.payload)
+          localStorage.setItem('messages',JSON.stringify(state.messages));
         },
     }
 })

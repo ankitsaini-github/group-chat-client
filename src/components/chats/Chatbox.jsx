@@ -8,29 +8,41 @@ import { toast } from "react-toastify";
 const Chatbox = () => {
   const messages = useSelector((state) => state.chats.messages);
   const dispatch = useDispatch();
-  // const [messages, setMessages] = useState([
-  //   { text: "Hi", sender: "You" },
-  //   { text: "Wassup", sender: "Putin" },
-  //   { text: "Good, lets meet.", sender: "You" },
-  // ]);
+
   const [input, setInput] = useState("");
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
-    const fetchAllChat = async()=>{
+    let cancelRequest = false;
+    const fetchAllChat = async(lastId)=>{
+      console.log('fetching all chats...');
+      
       const token = localStorage.getItem('token');
       try {
-        const res = await axios.get(`${import.meta.env.VITE_SERVER_IP}/chat/all`,{headers:{'Authorization' : token}});
-        dispatch(chatActions.setMessages(res.data.messages));
+        const res = await axios.get(`${import.meta.env.VITE_SERVER_IP}/chat/all`,{ 
+          params: { lastId },
+          headers: { 'Authorization': token }
+        });
+        // dispatch(chatActions.setMessages(res.data.messages));
+        if (!cancelRequest && res.data.messages.length>0) {
+          dispatch(chatActions.setMessages(res.data.messages));
+        }
       } catch (error) {
-        console.log("Error while Fetching chat : ", error.response.data.error);
-        toast.error(error.response.data.error);
+        // console.log("Error while Fetching chat : ", error.response.data.error);
+        // toast.error(error.response.data.error);
+        if (!cancelRequest) {
+          console.log("Error while Fetching chat : ", error.response.data.error);
+          toast.error(error.response.data.error);
+        }
       }
     } 
-    // fetchAllChat();
-    const interval = setInterval(() => fetchAllChat() , 1000);
+    const oldMessages = JSON.parse(localStorage.getItem('messages')) || []
+    const lastId = oldMessages.length > 0 ? oldMessages[oldMessages.length - 1].id : undefined;
+    // fetchAllChat(lastId);
+    const interval = setInterval(() => fetchAllChat(lastId) , 1000);
     return () => {
       clearInterval(interval);
+      cancelRequest = true;
     }
 
   }, []);
@@ -39,7 +51,7 @@ const Chatbox = () => {
   const sendChat = async(e) => {
     e.preventDefault();
     if (input.trim()) {
-      // setMessages([...messages, { text: input, sender: "You" }]);
+
       const token = localStorage.getItem('token');
       try {
         const res = await axios.post(`${import.meta.env.VITE_SERVER_IP}/chat/send`,{message:input},{headers:{'Authorization' : token}});
@@ -69,7 +81,7 @@ const Chatbox = () => {
               No messages yet. Start the conversation!
             </p>
           ) : (
-            messages.map((msg) => (
+            [...new Map(messages.map(msg => [msg.id, msg])).values()].map((msg) => (
               <div
                 key={msg.id}
                 className={`flex mb-4 ${
