@@ -9,7 +9,6 @@ import { ToastContainer } from "react-toastify";
 import store from './store/index.js';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
     <Provider store={store}>
       <App />
       <ToastContainer
@@ -25,6 +24,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           pauseOnHover
           theme="colored"
         />
-    </Provider>
-  </React.StrictMode>,
+    </Provider>,
 )

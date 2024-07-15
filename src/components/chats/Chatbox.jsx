@@ -13,39 +13,39 @@ const Chatbox = () => {
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
-    let cancelRequest = false;
-    const fetchAllChat = async(lastId)=>{
-      console.log('fetching all chats...');
-      
+    let fetchTimeout;
+
+    const fetchAllChat = async (lastId) => {
       const token = localStorage.getItem('token');
       try {
-        const res = await axios.get(`${import.meta.env.VITE_SERVER_IP}/chat/all`,{ 
+        const res = await axios.get(`${import.meta.env.VITE_SERVER_IP}/chat/all`, {
           params: { lastId },
           headers: { 'Authorization': token }
         });
-        // dispatch(chatActions.setMessages(res.data.messages));
-        if (!cancelRequest && res.data.messages.length>0) {
+        if (res.data.messages.length > 0) {
+          console.log('Fetched messages:', res.data.messages.length);
           dispatch(chatActions.setMessages(res.data.messages));
         }
       } catch (error) {
-        // console.log("Error while Fetching chat : ", error.response.data.error);
-        // toast.error(error.response.data.error);
-        if (!cancelRequest) {
-          console.log("Error while Fetching chat : ", error.response.data.error);
-          toast.error(error.response.data.error);
-        }
+        console.log("Error while fetching chat:", error.response.data?.error || error.message);
+        toast.error(error.response.data?.error || "Error fetching chat messages.");
+      } finally {
+        // Set up the next fetch
+        fetchTimeout = setTimeout(() => {
+          const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
+          const lastId = oldMessages.length > 0 ? oldMessages[oldMessages.length - 1].id : undefined;
+          console.log('Last message ID:', lastId);
+          fetchAllChat(lastId);
+        }, 1000);
       }
-    } 
-    const oldMessages = JSON.parse(localStorage.getItem('messages')) || []
-    const lastId = oldMessages.length > 0 ? oldMessages[oldMessages.length - 1].id : undefined;
-    // fetchAllChat(lastId);
-    const interval = setInterval(() => fetchAllChat(lastId) , 1000);
-    return () => {
-      clearInterval(interval);
-      cancelRequest = true;
-    }
+    };
 
-  }, []);
+    // Initial fetch
+    fetchAllChat();
+
+    return () => clearTimeout(fetchTimeout);
+
+  }, [dispatch]);
   
 
   const sendChat = async(e) => {
@@ -81,7 +81,7 @@ const Chatbox = () => {
               No messages yet. Start the conversation!
             </p>
           ) : (
-            [...new Map(messages.map(msg => [msg.id, msg])).values()].map((msg) => (
+            messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex mb-4 ${
