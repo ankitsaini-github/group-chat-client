@@ -93,7 +93,7 @@ const Groups = () => {
         {showAddGroupForm && (
           <div className="p-4 border-b border-gray-300 dark:border-gray-600 flex flex-col">
             <span
-              className="cursor-pointer ml-auto text-gray-900 dark:text-gray-100"
+              className="cursor-pointer ml-auto text-gray-900 dark:text-gray-100 border border-violet-500 px-2 py-1 rounded"
               onClick={() => setshowAddGroupForm(false)}
             >
               Close
