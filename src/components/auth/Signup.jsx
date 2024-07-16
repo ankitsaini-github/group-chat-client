@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
+
 import React from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const Signup = () => {
-  
+  const history = useHistory();
+
   const submitHandler = async (e)=>{
     e.preventDefault();
 
@@ -34,6 +36,7 @@ const Signup = () => {
 
       console.log("Server response:", res.data);
       toast.success(res.data.message);
+      history.push('/login');
 
     } catch (error) {
       console.log("Error while sign up : ", error.response.data.error);

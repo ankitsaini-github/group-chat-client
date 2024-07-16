@@ -33,7 +33,7 @@ const Login = () => {
       console.log("Server response:", res.data);
       dispatch(authActions.login({token:res.data.token, email:res.data.useremail, userId:res.data.userId}));
       toast.success(res.data.message);
-      history.push('/chat');
+      history.push('/groups');
 
     } catch (error) {
       console.log("Error while Login : ", error.response.data.error);

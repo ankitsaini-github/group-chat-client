@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -8,6 +9,10 @@ import { toast } from "react-toastify";
 const Chatbox = () => {
   const messages = useSelector((state) => state.chats.messages);
   const dispatch = useDispatch();
+  const { search } = useLocation();
+  const query = new URLSearchParams(search);
+  const groupId = query.get('groupId');
+  const groupName = query.get('groupName');
 
   const [input, setInput] = useState("");
   const userId = localStorage.getItem('userId');
@@ -19,7 +24,7 @@ const Chatbox = () => {
       const token = localStorage.getItem('token');
       try {
         const res = await axios.get(`${import.meta.env.VITE_SERVER_IP}/chat/all`, {
-          params: { lastId },
+          params: { lastId, groupId },
           headers: { 'Authorization': token }
         });
         if (res.data.messages.length > 0) {
@@ -68,10 +73,19 @@ const Chatbox = () => {
   return (
     <div className="w-full max-w-4xl mx-auto md:p-6 h-full">
       <div className="dark:border dark:border-gray-700 flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-        <div className="py-3 px-4 bg-gradient-to-b from-violet-600 to-violet-900">
+        <div className="py-3 px-4 bg-gradient-to-b from-violet-600 to-violet-900 flex justify-between">
           <p className="text-xl font-bold leading-tight tracking-tight text-white">
-            Hello, welcome to the chat!
+            {groupName}
           </p>
+          <span className="flex gap-4">
+            <p
+              className="text-white cursor-pointer hover:underline"
+              onClick={()=>{}}
+            >
+              Members
+            </p>
+            <Link className="text-white cursor-pointer hover:underline" to='/groups'>All groups</Link>
+          </span>
         </div>
 
         <div className="flex-1 p-4 overflow-y-auto ">
