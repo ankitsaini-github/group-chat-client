@@ -4,9 +4,12 @@ import { useDispatch, useSelector } from "react-redux";
 
 import axios from "axios";
 import { chatActions } from "../../store/chatReducer";
+import {io} from 'socket.io-client';
 import { toast } from "react-toastify";
 
 const Chatbox = () => {
+  const socket = io(`http://localhost:3001`)
+
   const messages = useSelector((state) => state.chats.messages);
   const dispatch = useDispatch();
   const { search } = useLocation();
@@ -22,6 +25,15 @@ const Chatbox = () => {
   const admin =
     groupMembers.filter((user) => user.id == userId)[0]?.groupmembers
       ?.isAdmin || false;
+
+  socket.emit('join-group',groupId); // join grp
+  
+  useEffect(() => {
+    socket.on('receive-chat',message=>{
+      dispatch(chatActions.addMessage(message));
+    })
+  }, [socket])
+  
 
   useEffect(() => {
     let fetchTimeout;
@@ -48,26 +60,35 @@ const Chatbox = () => {
         toast.error(
           error.response.data?.error || "Error fetching chat messages."
         );
-      } finally {
+      } 
+      // finally {
         // Set up the next fetch
-        fetchTimeout = setTimeout(() => {
-          const oldMessages =
-            JSON.parse(localStorage.getItem("messages")) || [];
-          const lastId =
-            oldMessages.length > 0
-              ? oldMessages[oldMessages.length - 1].id
-              : undefined;
-          console.log("Last message ID:", lastId);
-          fetchAllChat(lastId);
-        }, 1000);
-      }
+        // fetchTimeout = setTimeout(() => {
+        //   const oldMessages =
+        //     JSON.parse(localStorage.getItem("messages")) || [];
+        //   const lastId =
+        //     oldMessages.length > 0
+        //       ? oldMessages[oldMessages.length - 1].id
+        //       : undefined;
+        //   console.log("Last message ID:", lastId);
+        //   fetchAllChat(lastId);
+        // }, 1000);
+      // }
     };
+    const oldMessages =
+        JSON.parse(localStorage.getItem("messages")) || [];
+      const lastId =
+        oldMessages.length > 0
+          ? oldMessages[oldMessages.length - 1].id
+          : undefined;
+      console.log("Last message ID:", lastId);
+      fetchAllChat(lastId);
 
     // Initial fetch
-    fetchAllChat();
+    // fetchAllChat();
 
-    return () => clearTimeout(fetchTimeout);
-  }, [dispatch]);
+    // return () => clearTimeout(fetchTimeout);
+  }, [dispatch,socket]);
 
   useEffect(() => {
     async function fetchMembers() {
@@ -102,6 +123,9 @@ const Chatbox = () => {
           { headers: { Authorization: token } }
         );
         dispatch(chatActions.addMessage(res.data.message));
+        socket.emit('send-chat',{message: res.data.message}, groupId) // emit
+        
+
       } catch (error) {
         console.log(
           "Error while sending message : ",
