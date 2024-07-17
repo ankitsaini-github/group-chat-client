@@ -17,7 +17,11 @@ const Chatbox = () => {
   const [input, setInput] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
   const [memberForm, setMemberForm] = useState(false);
+
   const userId = localStorage.getItem("userId");
+  const admin =
+    groupMembers.filter((user) => user.id == userId)[0]?.groupmembers
+      ?.isAdmin || false;
 
   useEffect(() => {
     let fetchTimeout;
@@ -117,7 +121,7 @@ const Chatbox = () => {
     const payload = {
       userEmail: formData.get("memberemail"),
       admin: formData.get("memberadmin") ? true : false,
-      groupId:groupId,
+      groupId: groupId,
     };
     // console.log('--------------------',payload);
     try {
@@ -127,12 +131,35 @@ const Chatbox = () => {
         payload,
         { headers: { Authorization: token } }
       );
-      console.log('new user----------',res.data);
-      setGroupMembers(prev=>[...prev,res.data.newUser])
-      toast.success(res.data.message)
+      console.log("new user----------", res.data);
+      setGroupMembers((prev) => [...prev, res.data.newUser]);
+      toast.success(res.data.message);
     } catch (error) {
       console.log("Error while adding member : ", error.response.data.error);
       toast.error(error.response.data.error);
+    }
+  };
+
+  const removeMemberHandler = async (id) => {
+    console.log("remove user :", id, groupId);
+    if (confirm("Delete this member ?")) {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.delete(
+          `${import.meta.env.VITE_SERVER_IP}/admin/groupmembers`,
+          { params: { id, groupId }, headers: { Authorization: token } }
+        );
+        console.log("deleted user----------", res.data);
+        const newMemberList = groupMembers.filter((user) => user.id != id);
+        setGroupMembers(newMemberList);
+        toast.success(res.data.message);
+      } catch (error) {
+        console.log(
+          "Error while removing member : ",
+          error.response.data.error
+        );
+        toast.error(error.response.data.error);
+      }
     }
   };
 
@@ -163,55 +190,60 @@ const Chatbox = () => {
 
         {memberForm && (
           <>
-            <div className="p-4 border-b border-gray-300 dark:border-gray-600 flex flex-col">
-              <span
-                className="cursor-pointer ml-auto text-gray-900 dark:text-gray-100 border border-violet-500 px-2 py-1 rounded"
-                onClick={() => setMemberForm(false)}
-              >
-                Close
-              </span>
+            {admin && (
+              <div className="p-4 border-b border-gray-300 dark:border-gray-600 flex flex-col">
+                <span
+                  className="cursor-pointer ml-auto text-gray-900 dark:text-gray-100 border border-violet-500 px-2 py-1 rounded"
+                  onClick={() => setMemberForm(false)}
+                >
+                  Close
+                </span>
 
-              <form className="flex flex-col gap-3" onSubmit={addMemberHandler}>
-                <h2 className="text-xl font-bold leading-tight tracking-tight text-violet-700 dark:text-violet-400 border-b border-b-gray-300 dark:border-b-gray-600 py-3">
-                  Add Member
-                </h2>
-                <label
-                  htmlFor="memberemail"
-                  className="text-lg text-gray-900 dark:text-gray-200"
+                <form
+                  className="flex flex-col gap-3"
+                  onSubmit={addMemberHandler}
                 >
-                  Enter Member Email :{" "}
-                </label>
-                <input
-                  type="email"
-                  name="memberemail"
-                  id="memberemail"
-                  placeholder="Email"
-                  required
-                  className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-violet-600 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                />
-                <div className="flex items-center mb-4">
-                  <input
-                    id="memberadmin"
-                    name="memberadmin"
-                    type="checkbox"
-                    value="admin"
-                    className="w-5 h-5 text-violet-600 bg-gray-100 border-gray-300 rounded focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
+                  <h2 className="text-xl font-bold leading-tight tracking-tight text-violet-700 dark:text-violet-400 border-b border-b-gray-300 dark:border-b-gray-600 py-3">
+                    Add Member
+                  </h2>
                   <label
-                    htmlFor="memberadmin"
-                    className="ms-4 text-lg text-gray-900 dark:text-gray-200"
+                    htmlFor="memberemail"
+                    className="text-lg text-gray-900 dark:text-gray-200"
                   >
-                    Admin Rights
+                    Enter Member Email :{" "}
                   </label>
-                </div>
-                <button
-                  type="submit"
-                  className="ml-auto px-4 py-2 bg-violet-700 text-white rounded hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-600"
-                >
-                  Add Member
-                </button>
-              </form>
-            </div>
+                  <input
+                    type="email"
+                    name="memberemail"
+                    id="memberemail"
+                    placeholder="Email"
+                    required
+                    className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-violet-600 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                  />
+                  <div className="flex items-center mb-4">
+                    <input
+                      id="memberadmin"
+                      name="memberadmin"
+                      type="checkbox"
+                      value="admin"
+                      className="w-5 h-5 text-violet-600 bg-gray-100 border-gray-300 rounded focus:ring-violet-500 dark:focus:ring-violet-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <label
+                      htmlFor="memberadmin"
+                      className="ms-4 text-lg text-gray-900 dark:text-gray-200"
+                    >
+                      Admin Rights
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="ml-auto px-4 py-2 bg-violet-700 text-white rounded hover:bg-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-600"
+                  >
+                    Add Member
+                  </button>
+                </form>
+              </div>
+            )}
 
             <div className="p-4 flex flex-col overflow-y-auto">
               <h2 className="text-xl font-bold leading-tight tracking-tight text-violet-700 dark:text-violet-400 mb-4 border-b border-b-gray-300 dark:border-b-gray-600 py-3">
@@ -223,13 +255,23 @@ const Chatbox = () => {
                     key={member.id}
                     className="p-4 w-full border rounded dark:border-gray-600 hover:bg-gray-100 hover:dark:bg-gray-700 flex items-center justify-between"
                   >
-                    <span className="text-gray-800 dark:text-gray-300 text-xl font-medium">
-                      {member.name}
-                    </span>
-                    {member.groupmembers.isAdmin && (
-                      <span className=" text-gray-100 text-xs px-1 bg-violet-600 rounded font-bold">
-                        Admin
+                    <div>
+                      <span className="text-gray-800 dark:text-gray-300 text-xl font-medium">
+                        {member.name}
                       </span>
+                      {member.groupmembers.isAdmin && (
+                        <span className="ms-4 text-gray-100 text-xs px-1 bg-violet-600 rounded font-bold">
+                          Admin
+                        </span>
+                      )}
+                    </div>
+                    {admin && member.id != userId && (
+                      <button
+                        className=" text-gray-100 text-sm p-1 bg-red-600 hover:bg-red-700 rounded font-semibold"
+                        onClick={() => removeMemberHandler(member.id)}
+                      >
+                        Remove
+                      </button>
                     )}
                   </li>
                 ))}
