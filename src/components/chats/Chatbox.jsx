@@ -7,8 +7,9 @@ import { chatActions } from "../../store/chatReducer";
 import {io} from 'socket.io-client';
 import { toast } from "react-toastify";
 
+const socket = io(`${import.meta.env.VITE_SERVER_IP}`)
+
 const Chatbox = () => {
-  const socket = io(`http://localhost:3001`)
 
   const messages = useSelector((state) => state.chats.messages);
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ const Chatbox = () => {
   const [memberForm, setMemberForm] = useState(false);
 
   const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
   const admin =
     groupMembers.filter((user) => user.id == userId)[0]?.groupmembers
       ?.isAdmin || false;
@@ -36,7 +38,6 @@ const Chatbox = () => {
   
 
   useEffect(() => {
-    let fetchTimeout;
 
     const fetchAllChat = async (lastId) => {
       const token = localStorage.getItem("token");
@@ -61,19 +62,6 @@ const Chatbox = () => {
           error.response.data?.error || "Error fetching chat messages."
         );
       } 
-      // finally {
-        // Set up the next fetch
-        // fetchTimeout = setTimeout(() => {
-        //   const oldMessages =
-        //     JSON.parse(localStorage.getItem("messages")) || [];
-        //   const lastId =
-        //     oldMessages.length > 0
-        //       ? oldMessages[oldMessages.length - 1].id
-        //       : undefined;
-        //   console.log("Last message ID:", lastId);
-        //   fetchAllChat(lastId);
-        // }, 1000);
-      // }
     };
     const oldMessages =
         JSON.parse(localStorage.getItem("messages")) || [];
@@ -84,11 +72,7 @@ const Chatbox = () => {
       console.log("Last message ID:", lastId);
       fetchAllChat(lastId);
 
-    // Initial fetch
-    // fetchAllChat();
-
-    // return () => clearTimeout(fetchTimeout);
-  }, [dispatch,socket]);
+  }, [dispatch]);
 
   useEffect(() => {
     async function fetchMembers() {
@@ -115,7 +99,6 @@ const Chatbox = () => {
   const sendChat = async (e) => {
     e.preventDefault();
     if (input.trim()) {
-      const token = localStorage.getItem("token");
       try {
         const res = await axios.post(
           `${import.meta.env.VITE_SERVER_IP}/chat/send`,
@@ -149,7 +132,6 @@ const Chatbox = () => {
     };
     // console.log('--------------------',payload);
     try {
-      const token = localStorage.getItem("token");
       const res = await axios.post(
         `${import.meta.env.VITE_SERVER_IP}/admin/groupmembers`,
         payload,
@@ -166,9 +148,8 @@ const Chatbox = () => {
 
   const removeMemberHandler = async (id) => {
     console.log("remove user :", id, groupId);
-    if (confirm("Delete this member ?")) {
+    if (confirm("Remove this member ?")) {
       try {
-        const token = localStorage.getItem("token");
         const res = await axios.delete(
           `${import.meta.env.VITE_SERVER_IP}/admin/groupmembers`,
           { params: { id, groupId }, headers: { Authorization: token } }
